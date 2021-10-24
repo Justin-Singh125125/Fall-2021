@@ -1,5 +1,8 @@
 USE assignment3;
 
+
+SET GLOBAL log_bin_trust_function_creators = 1;
+
 DROP PROCEDURE IF EXISTS EXHIBITION_PAINTING_ARTIST;
 DROP FUNCTION IF EXISTS No_of_painting_exhibited;
 DROP VIEW IF EXISTS artist_no_of_sculpture;
@@ -94,11 +97,11 @@ Create view Sculpture_view as
 
 -- SECTION 3
 CREATE VIEW artist_no_of_sculpture as
-	SELECT ao.artist_name, COUNT(*) as num_of_sculpture
-    FROM Art_object as ao, Sculpture as s
-    WHERE ao.id_no = s.id_no
-    GROUP BY ao.artist_name
-    HAVING COUNT(*) > 2;
+	SELECT ao.artist_name, COUNT(*) as no_of_sculpture
+	FROM Art_Object as ao, Sculpture as s
+	WHERE ao.id_no = s.id_no
+	GROUP BY ao.artist_name
+	HAVING no_of_sculpture > 2;
     
 INSERT INTO 
 	Artist(
@@ -111,8 +114,25 @@ INSERT INTO
 		'Enrique T Dupree', 
 		curdate(), 
 		curdate(), 
-		'Lifeguard, Ski Patrol, and Other Recreational Protective Service Worker', 'US'
+		'Lifeguard, Ski Patrol, and Other Recreational Protective Service Worker', 
+        'US'
     );
+    
+
+    INSERT INTO 
+	Artist(
+		aname,date_born,
+		date_died,
+		description,
+		country_of_origin
+    ) 
+    VALUES (
+		'Timothy A Delacruz', 
+		curdate(), 
+		curdate(), 
+		'Troublemaker. Future teen idol. Gamer. Explorer. Entrepreneur. Food lover.', 
+        'US'
+    );    
     
 INSERT INTO Art_object(
 	id_no,
@@ -200,6 +220,35 @@ VALUES (
 );
 
 
+INSERT INTO Art_object(
+	id_no,
+    year,
+    title,
+    description,
+    artist_name
+) 
+VALUES (
+	'4',
+    '2021',
+    'Random test 1',
+    'Random test 1',
+    'Timothy A Delacruz'
+);
+
+INSERT INTO Sculpture(
+	id_no,
+    material,
+    weight,
+    height
+) 
+VALUES (
+	'4',
+    'wood',
+    '1000',
+    '500'
+);
+
+
 SELECT * from artist_no_of_sculpture;
 
 
@@ -212,7 +261,7 @@ INSERT INTO Art_object(
     artist_name
 ) 
 VALUES (
-	'4',
+	'5',
     '2022',
     'Sick Tower',
     'A tower full of sick',
@@ -227,9 +276,38 @@ INSERT INTO Painting(
     drawn_on
 ) 
 VALUES (
-	'4',
+	'5',
     'colored',
     'sick style',
+    'paper'
+);
+
+INSERT INTO Art_object(
+	id_no,
+    year,
+    title,
+    description,
+    artist_name
+) 
+VALUES (
+	'6',
+    '2022',
+    '6 Tower',
+    'A tower full of sick',
+    'Enrique T Dupree'
+);
+
+
+INSERT INTO Painting(
+	id_no,
+    type,
+    style,
+    drawn_on
+) 
+VALUES (
+	'6',
+    'colored',
+    '6 style',
     'paper'
 );
 
@@ -244,12 +322,32 @@ VALUES (
     curdate()
 );
 
+INSERT INTO Exhibition(
+	ename,
+    start_date,
+    end_date
+) 
+VALUES (
+	'E2',
+    curdate(),
+    curdate()
+);
+
 INSERT INTO Shown_at(
 	art,
     exhibition_name
 ) 
 VALUES (
-	4,
+	5,
+	'E1'
+);
+
+INSERT INTO Shown_at(
+	art,
+    exhibition_name
+) 
+VALUES (
+	6,
 	'E1'
 );
 
@@ -270,13 +368,10 @@ BEGIN
 
 	DECLARE no_of_paintings INT;
     
-	SELECT COUNT(*) INTO no_of_paintings
-	FROM Painting p 
-	WHERE p.id_no IN (
-				SELECT sa.art 
-				FROM Shown_at as sa
-				WHERE sa.exhibition_name = exhibition_name
-            );
+	SELECT COUNT(*) INTO no_of_paintings 
+	FROM Shown_at AS at
+	INNER JOIN Painting AS p ON at.art = p.id_no
+	WHERE at.exhibition_name = exhibition_name;
             
     RETURN no_of_paintings;
 
@@ -295,23 +390,21 @@ WHERE ename = 'E1';
 CREATE PROCEDURE EXHIBITION_PAINTING_ARTIST (IN artist_name VARCHAR(60), IN exhibition_name VARCHAR(60))
    BEGIN
         
-		SELECT
-			ao.artist_name,
-			ao.description,
-			p.style,
-			sa.exhibition_name,
-			e.start_date
-		FROM
-			Art_object ao
-			INNER JOIN Shown_at sa ON ao.id_no = sa.art
-			INNER JOIN Exhibition e ON e.ename = sa.exhibition_name
-		    INNER JOIN Painting p ON p.id_no = ao.id_no
-		WHERE
-			ao.artist_name = artist_name AND sa.exhibition_name = exhibition_name;
+	SELECT ao.artist_name, ao.description, p.style, e.ename, e.start_date
+	FROM Shown_at AS sa
+	INNER JOIN Exhibition as e ON e.ename = sa.exhibition_name
+	INNER JOIN Painting as p ON p.id_no= sa.art
+	INNER JOIN Art_object as ao ON ao.id_no= sa.art
+	WHERE e.ename = exhibition_name AND ao.artist_name = artist_name;
         
    END $$
 delimiter ; 
 
 
 CALL print_data('Enrique T Dupree', 'E1');
+
+
+
+
+
 
