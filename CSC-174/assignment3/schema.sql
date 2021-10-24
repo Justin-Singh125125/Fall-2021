@@ -1,7 +1,4 @@
-USE assignment3;
-
-
-SET GLOBAL log_bin_trust_function_creators = 1;
+USE CSC174044;
 
 DROP PROCEDURE IF EXISTS EXHIBITION_PAINTING_ARTIST;
 DROP FUNCTION IF EXISTS No_of_painting_exhibited;
@@ -98,7 +95,7 @@ Create view Sculpture_view as
 -- SECTION 3
 CREATE VIEW artist_no_of_sculpture as
 	SELECT ao.artist_name, COUNT(*) as no_of_sculpture
-	FROM Art_Object as ao, Sculpture as s
+	FROM Art_object as ao, Sculpture as s
 	WHERE ao.id_no = s.id_no
 	GROUP BY ao.artist_name
 	HAVING no_of_sculpture > 2;
